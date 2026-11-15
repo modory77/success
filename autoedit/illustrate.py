@@ -171,11 +171,27 @@ def _use_openai(o):
     return o["image_provider"].lower() in ("auto", "openai") and bool(os.environ.get("OPENAI_API_KEY"))
 
 
+def _openai_image_retry(sc, png, o, tries=4):
+    """동시에 많이 요청하면 속도 제한(429)에 걸릴 수 있어, 그때만 점점 길게 쉬었다가 재시도한다."""
+    import time
+    for attempt in range(tries):
+        try:
+            return _openai_image(sc, png, o)
+        except Exception as e:  # noqa: BLE001
+            msg = str(e).lower()
+            retryable = "429" in msg or "rate" in msg or "timeout" in msg or "overloaded" in msg or "503" in msg
+            if "no credits" in msg or "insufficient_quota" in msg or "billing" in msg:
+                retryable = False   # 크레딧 부족은 재시도해도 소용없음
+            if not retryable or attempt == tries - 1:
+                raise
+            time.sleep(4 * 2 ** attempt)
+
+
 def make_image(idx, sc, work: Path, o):
     png = work / f"scene_{idx:02d}.png"
     if _use_openai(o):
         try:
-            _openai_image(sc, png, o)
+            _openai_image_retry(sc, png, o)
             return {**sc, "png": str(png), "source": "openai"}
         except Exception as e:
             log(f"      장면 {idx}: OpenAI 이미지 실패 -> SVG로 대체 ({str(e)[:140]})")
@@ -196,9 +212,19 @@ def make_image(idx, sc, work: Path, o):
 
 
 def generate_images(scenes, work: Path, o):
-    log(f"[4/6] 일러스트 이미지 생성 중... ({'OpenAI gpt-image-1' if _use_openai(o) else 'Claude SVG'}, {len(scenes)}장)")
-    with ThreadPoolExecutor(3) as ex:
-        res = list(ex.map(lambda a: make_image(a[0], a[1], work, o), enumerate(scenes)))
+    """장면 이미지를 병렬로 생성한다(동시 요청 수 = image_concurrency). 결과 순서는 장면 순서 그대로."""
+    import time
+    from concurrent.futures import as_completed
+    workers = max(1, min(int(o.get("image_concurrency", 6)), len(scenes) or 1))
+    log(f"[4/6] 일러스트 이미지 생성 중... ({'OpenAI gpt-image-1' if _use_openai(o) else 'Claude SVG'}, "
+        f"{len(scenes)}장, 동시 {workers}장씩)")
+    t0, res, done = time.time(), [None] * len(scenes), 0
+    with ThreadPoolExecutor(workers) as ex:
+        futs = {ex.submit(make_image, i, sc, work, o): i for i, sc in enumerate(scenes)}
+        for f in as_completed(futs):
+            res[futs[f]] = f.result()
+            done += 1
+            log(f"      {done}/{len(scenes)} 완료 ({time.time() - t0:.0f}초)")
     return [r for r in res if r]
 
 

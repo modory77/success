@@ -33,6 +33,7 @@ def defaults() -> dict:
         "image_provider": _env("IMAGE_PROVIDER", "auto"),  # auto | openai | svg
         "image_model": _env("IMAGE_MODEL", "gpt-image-1"),
         "image_quality": _env("IMAGE_QUALITY", "medium"),
+        "image_concurrency": int(_env("IMAGE_CONCURRENCY", "6")),  # 이미지 동시 생성 수(병렬)
         # 로고/아이콘 오버레이
         "overlays": _b(_env("OVERLAYS", "true")),
         "overlays_per_min": float(_env("OVERLAYS_PER_MIN", "4.0")),

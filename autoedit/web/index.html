@@ -100,6 +100,7 @@ video{width:100%;max-height:420px;border:var(--line);border-radius:12px;backgrou
         <div class="f">무음 소리 기준(dB)<input type="number" step="1" id="silence_db"></div>
         <div class="f">일러스트/분<input type="number" step="0.5" id="max_scenes_per_min"></div>
         <div class="f">오버레이/분<input type="number" step="0.5" id="overlays_per_min"></div>
+        <div class="f">이미지 동시 생성(병렬)<input type="number" step="1" min="1" max="12" id="image_concurrency"></div>
         <div class="f">OCR 간격(초)<input type="number" step="0.1" id="ocr_interval"></div>
         <div class="f">화질(낮을수록 좋음)<input type="number" step="1" id="video_quality"></div>
         <div class="f">인코더<select id="video_codec"><option value="auto">자동</option><option value="h264_nvenc">NVIDIA GPU</option><option value="libx264">CPU</option></select></div>
@@ -127,7 +128,7 @@ const $=id=>document.getElementById(id);
 const H={'X-Autoedit':'1'};
 const STAGES=[['transcribe','전사','Whisper'],['cut','컷 편집','무음·추임새'],['plan','기획','Claude'],['image','이미지 생성','일러스트·아이콘'],['privacy','개인정보 탐지','OCR'],['render','최종 렌더','모자이크+합성']];
 const BOOL=['cut','illustrations','overlays','mosaic','blur_faces','mute_spoken_pii','subtitles','remove_stutters'];
-const OPT=['illustration_mode','whisper_model','image_provider','min_silence','keep_silence','silence_db','max_scenes_per_min','overlays_per_min','ocr_interval','video_quality','video_codec','whisper_device','blur_words','fillers'];
+const OPT=['illustration_mode','whisper_model','image_provider','min_silence','keep_silence','silence_db','max_scenes_per_min','overlays_per_min','image_concurrency','ocr_interval','video_quality','video_codec','whisper_device','blur_words','fillers'];
 let sel=localStorage.getItem('sel')||'', running=false, logPos=0, lastVideos=[], formInit=false;
 
 async function api(path,body){
