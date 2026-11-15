@@ -2,6 +2,10 @@
 
 영상 1개를 넣으면 전사 → 무음/필러/말더듬 컷 → 설명 일러스트·로고 오버레이 → 개인정보 모자이크 → 자막 → 렌더까지 처리하는 Windows 로컬 도구. 사용자는 한국어 사용자이며 강의(웹 UI + 단계별 파이프라인)를 따라가며 만들고 있다. 설명/주석/로그는 한국어로 쓴다.
 
+## 먼저 읽기
+- `docs/ai-context/` — 로컬 Claude 메모리 복사본(프로젝트 배경, 사용자 성향, 저장소/푸시 방법, 환경 제약, 비밀키 규칙). 작업 전에 먼저 읽는다.
+- `agent.md` — 다른 AI 도구(Codex, Cursor 등)용 요약. `docs/cloud-setup.md` — 클라우드 세션 설정. `.claude/launch.json` — 웹 UI 미리보기 설정.
+
 ## 실행
 - 환경: **Python 3.12 venv(`.venv`)**. 시스템 Python 3.15 는 휠이 없어 쓰지 않는다. 항상 `.venv\Scripts\python.exe` 사용.
 - 웹 UI: `ui.bat` → http://127.0.0.1:8766 (`python -m autoedit.webui`)

@@ -1,0 +1,5 @@
+- [autoedit 프로젝트 개요](project-autoedit.md) — 유튜브 1차 자동 편집기, 웹 UI/CLI/폴더 감시, 강의 따라가는 중
+- [사용자: 강의 따라하는 한국어 사용자](user-korean-lecture-follower.md) — 화면 기준 안내, 강의와 다른 점은 비교해서 알림
+- [GitHub 저장소와 푸시 방법](reference-github-repo.md) — modory77/success(공개), gh 인증, noreply 이메일
+- [환경 제약](project-env-constraints.md) — Python 3.12 venv, DLL 차단 폴백, 4K 느림, API 크레딧
+- [비밀키·공개 저장소 규칙](feedback-secrets-and-public-repo.md) — 키는 .env 에만, 공개 저장소에 개인정보 금지

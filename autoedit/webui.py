@@ -256,4 +256,5 @@ def main(open_browser=True):
 
 
 if __name__ == "__main__":
-    main()
+    # 미리보기 창 등에서 실행할 때는 AUTOEDIT_NO_BROWSER=1 로 브라우저 자동 열기를 끈다
+    main(open_browser=not os.environ.get("AUTOEDIT_NO_BROWSER"))

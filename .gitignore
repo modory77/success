@@ -30,6 +30,9 @@ models/
 # 이 프로젝트와 무관한 개인 메모
 피클볼영상_편집계획.md
 
+# Claude 로컬 설정(개인용) — launch.json 은 공유
+.claude/settings.local.json
+
 # OS / 에디터
 Thumbs.db
 .DS_Store

@@ -1,4 +1,4 @@
-# AGENTS.md
+﻿# agent.md
 
 AI 에이전트(Codex, Claude Code 등)용 안내. 자세한 구조와 규칙은 [CLAUDE.md](CLAUDE.md) 를 따른다.
 
