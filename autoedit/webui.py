@@ -83,6 +83,35 @@ def list_videos():
     return out
 
 
+RELOAD_ORDER = ["common", "config", "cut", "transcribe", "privacy", "subtitles", "illustrate", "render", "pipeline"]
+
+
+def reload_modules():
+    """작업을 시작할 때마다 처리 코드를 다시 불러와서, 서버를 재시작하지 않아도 수정한 코드가 적용되게 한다."""
+    import importlib
+    import sys
+    for name in RELOAD_ORDER:
+        m = sys.modules.get(f"autoedit.{name}")
+        if m is not None:
+            importlib.reload(m)
+    common.load_dotenv()
+
+
+def _watch_self():
+    """webui.py 자체가 바뀌면(작업 중이 아닐 때) 종료코드 75 로 끝낸다 -> ui.bat 이 자동으로 다시 실행."""
+    import time
+    me = Path(__file__)
+    base = me.stat().st_mtime
+    while True:
+        time.sleep(2)
+        try:
+            if me.stat().st_mtime != base and not Job.running:
+                print("서버 코드가 바뀌어 자동으로 다시 시작합니다...", flush=True)
+                os._exit(75)
+        except OSError:
+            pass
+
+
 def start_job(vid, stage, force, opts):
     with Job.lock:
         if Job.running:
@@ -91,6 +120,13 @@ def start_job(vid, stage, force, opts):
     path = resolve_video(vid)
 
     def work():
+        try:
+            reload_modules()
+        except Exception as e:  # noqa: BLE001  (수정 중인 코드에 문법 오류가 있는 경우 등)
+            Job.error = f"코드를 다시 불러오지 못했습니다: {e}"
+            Job.lines.append(Job.error)
+            Job.running = False
+            return
         common.add_log_sink(_sink)
         try:
             pipeline.run(path, stage, opts, force)
@@ -245,6 +281,7 @@ def main(open_browser=True):
         d.mkdir(exist_ok=True)
     (ROOT / config.defaults()["out_dir"]).mkdir(exist_ok=True)
     srv = ThreadingHTTPServer(("127.0.0.1", PORT), Handler)
+    threading.Thread(target=_watch_self, daemon=True).start()
     url = f"http://127.0.0.1:{PORT}"
     print(f"유튜브 자동 편집 UI: {url}   (종료: Ctrl+C)", flush=True)
     if open_browser:
