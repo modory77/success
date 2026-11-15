@@ -1,0 +1,236 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>유튜브 자동 편집</title>
+<style>
+:root{--bg:#FFF7E8;--ink:#2b2220;--card:#fff;--yellow:#FFC83D;--pink:#FF8FA3;--green:#7FD1AE;--blue:#8EC5FF;--line:3px solid var(--ink);--sh:5px 5px 0 var(--ink)}
+@media (prefers-color-scheme:dark){:root{--bg:#1d1916;--ink:#f3e9d8;--card:#2a241f;--sh:5px 5px 0 #000;--line:3px solid #f3e9d8}}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font:15px/1.5 "Malgun Gothic","Apple SD Gothic Neo",system-ui,sans-serif}
+header{background:var(--yellow);border-bottom:var(--line);padding:18px 28px;display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap;color:#2b2220}
+header h1{margin:0;font-size:28px}
+header p{margin:2px 0 0;font-size:14px}
+.pill{background:#fff;border:var(--line);border-radius:999px;padding:6px 16px;font-weight:700;color:#2b2220}
+main{display:grid;grid-template-columns:minmax(300px,1fr) minmax(380px,1.35fr);gap:22px;padding:22px 28px;max-width:1300px;margin:auto}
+@media(max-width:860px){main{grid-template-columns:1fr;padding:16px}}
+.card{background:var(--card);border:var(--line);border-radius:18px;box-shadow:var(--sh);padding:18px;margin-bottom:22px}
+.card h2{margin:0 0 12px;font-size:18px;display:flex;align-items:center;gap:8px}
+.num{display:inline-grid;place-items:center;width:28px;height:28px;border-radius:50%;background:var(--yellow);border:var(--line);font-size:14px;color:#2b2220}
+.drop{border:3px dashed var(--ink);border-radius:14px;padding:22px 12px;text-align:center;cursor:pointer;background:rgba(255,200,61,.12)}
+.drop.over{background:rgba(255,200,61,.4)}
+.drop small{display:block;opacity:.7}
+.vid{border:var(--line);border-radius:12px;padding:10px 12px;margin-top:10px;cursor:pointer;background:var(--card)}
+.vid.sel{background:#FFE9A8;color:#2b2220}
+.vid b{word-break:break-all}.vid small{opacity:.75}
+.chips{display:flex;flex-wrap:wrap;gap:5px;margin-top:6px}
+.chip{border:2px solid var(--ink);border-radius:999px;padding:0 9px;font-size:12px;opacity:.45}
+.chip.on{background:var(--green);opacity:1;color:#2b2220}
+button,.btn{font:inherit;font-weight:700;border:var(--line);border-radius:12px;background:var(--card);color:var(--ink);padding:8px 14px;cursor:pointer;box-shadow:3px 3px 0 var(--ink)}
+button:active{transform:translate(2px,2px);box-shadow:1px 1px 0 var(--ink)}
+button:disabled{opacity:.45;cursor:not-allowed}
+button.primary{background:var(--yellow);color:#2b2220;font-size:16px}
+.row{display:flex;gap:8px;flex-wrap:wrap;margin-top:12px}
+.opts{display:grid;grid-template-columns:repeat(auto-fit,minmax(190px,1fr));gap:8px 16px}
+label.chk{display:flex;gap:8px;align-items:center;cursor:pointer}
+input[type=checkbox]{width:18px;height:18px;accent-color:#e08a00}
+.f{display:flex;flex-direction:column;gap:3px;font-size:13px}
+input[type=text],input[type=password],input[type=number],select{font:inherit;border:var(--line);border-radius:10px;padding:6px 10px;background:var(--card);color:var(--ink);width:100%}
+details{margin-top:12px}summary{cursor:pointer;font-weight:700}
+.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px;margin-top:10px}
+.steps{display:grid;grid-template-columns:repeat(auto-fit,minmax(120px,1fr));gap:10px;margin-top:12px}
+.steps button{text-align:center;line-height:1.25}.steps small{display:block;font-weight:400;opacity:.75}
+#log{background:#14110f;color:#e8dfcf;border:var(--line);border-radius:12px;padding:12px;height:260px;overflow:auto;white-space:pre-wrap;font:13px/1.45 Consolas,"Malgun Gothic",monospace;margin-top:14px}
+.state{display:inline-block;border:2px solid var(--ink);border-radius:999px;padding:0 10px;font-size:13px;margin-left:6px}
+.state.run{background:var(--pink);color:#2b2220}
+.hint{font-size:13px;opacity:.75;margin:8px 0 0}
+video{width:100%;max-height:420px;border:var(--line);border-radius:12px;background:#000;margin-top:10px}
+.bar{height:10px;border:2px solid var(--ink);border-radius:8px;overflow:hidden;margin-top:8px;display:none}.bar i{display:block;height:100%;width:0;background:var(--green)}
+</style>
+</head>
+<body>
+<header>
+  <div><h1>🎬 유튜브 자동 편집</h1><p>전사 → 무음·추임새 컷 → 일러스트·오버레이 기획 → 개인정보 모자이크 → 렌더</p></div>
+  <div class="pill" id="gpu">장치 확인 중…</div>
+</header>
+<main>
+<div>
+  <section class="card">
+    <h2><span class="num">1</span>영상</h2>
+    <div class="drop" id="drop"><b>영상을 여기에 끌어다 놓거나 클릭해서 선택</b><small>uploads/ 폴더에 저장됩니다</small></div>
+    <input type="file" id="file" accept="video/*,.mkv" multiple hidden>
+    <div class="bar" id="bar"><i></i></div>
+    <div id="vids"></div>
+    <div class="row">
+      <button id="refresh">새로고침</button>
+      <button id="clear">선택 영상 캐시 삭제</button>
+    </div>
+  </section>
+  <section class="card">
+    <h2><span class="num">⚙</span>설정 (API 키)</h2>
+    <div class="f">Claude (기획) <span id="k1"></span><input type="password" id="anthropic" placeholder="ANTHROPIC_API_KEY (sk-ant-...)" autocomplete="off"></div>
+    <div class="f" style="margin-top:8px">OpenAI (그림 생성) <span id="k2"></span><input type="password" id="openai" placeholder="OPENAI_API_KEY (sk-...)" autocomplete="off"></div>
+    <div class="row"><button id="savekeys">저장</button></div>
+    <p class="hint">.env 파일에 저장됩니다. 비워 두면 기존 값이 유지됩니다. 키는 화면에 다시 표시되지 않습니다.</p>
+  </section>
+</div>
+<div>
+  <section class="card">
+    <h2><span class="num">2</span>옵션</h2>
+    <div class="opts">
+      <label class="chk"><input type="checkbox" id="cut"> 무음·추임새 컷</label>
+      <label class="chk"><input type="checkbox" id="illustrations"> 설명 일러스트</label>
+      <label class="chk"><input type="checkbox" id="overlays"> 로고·아이콘 오버레이</label>
+      <label class="chk"><input type="checkbox" id="mosaic"> 개인정보 모자이크</label>
+      <label class="chk"><input type="checkbox" id="blur_faces"> 얼굴 모자이크</label>
+      <label class="chk"><input type="checkbox" id="mute_spoken_pii"> 음성 개인정보 음소거</label>
+      <label class="chk"><input type="checkbox" id="subtitles"> 자막</label>
+      <label class="chk"><input type="checkbox" id="remove_stutters"> 말더듬 제거</label>
+    </div>
+    <div class="grid">
+      <div class="f">일러스트 위치<select id="illustration_mode"><option value="cutaway">전체 화면 전환</option><option value="center">중앙 카드</option><option value="pip">우측 카드</option></select></div>
+      <div class="f">Whisper<select id="whisper_model"><option>large-v3</option><option>medium</option><option>small</option><option>base</option></select></div>
+      <div class="f">그림 생성<select id="image_provider"><option value="auto">자동 (OpenAI 키 있으면)</option><option value="openai">OpenAI</option><option value="svg">Claude SVG</option></select></div>
+    </div>
+    <details open><summary>▾ 세부 조절</summary>
+      <div class="grid">
+        <div class="f">무음 기준(초)<input type="number" step="0.1" id="min_silence"></div>
+        <div class="f">남길 무음(초)<input type="number" step="0.1" id="keep_silence"></div>
+        <div class="f">무음 소리 기준(dB)<input type="number" step="1" id="silence_db"></div>
+        <div class="f">일러스트/분<input type="number" step="0.5" id="max_scenes_per_min"></div>
+        <div class="f">오버레이/분<input type="number" step="0.5" id="overlays_per_min"></div>
+        <div class="f">OCR 간격(초)<input type="number" step="0.1" id="ocr_interval"></div>
+        <div class="f">화질(낮을수록 좋음)<input type="number" step="1" id="video_quality"></div>
+        <div class="f">인코더<select id="video_codec"><option value="auto">자동</option><option value="h264_nvenc">NVIDIA GPU</option><option value="libx264">CPU</option></select></div>
+        <div class="f">Whisper 장치<select id="whisper_device"><option value="auto">자동</option><option value="cpu">CPU</option></select></div>
+      </div>
+      <div class="f" style="margin-top:10px">가릴 단어 (쉼표로 구분, 예: 홍길동,강남구)<input type="text" id="blur_words"></div>
+      <div class="f" style="margin-top:10px">제거할 필러워드 (쉼표로 구분)<input type="text" id="fillers"></div>
+    </details>
+  </section>
+  <section class="card">
+    <h2><span class="num">3</span>실행 <span class="state" id="state">대기</span></h2>
+    <div class="row" style="align-items:center">
+      <button class="primary" id="all">▶ 전체 실행</button>
+      <label class="chk"><input type="checkbox" id="force"> 이 단계 강제 재실행(캐시 무시)</label>
+    </div>
+    <div class="steps" id="steps"></div>
+    <p class="hint">단계 버튼은 앞 단계 결과가 있으면 재사용하고, 없으면 자동으로 먼저 실행합니다. 옵션을 바꿨다면 해당 단계를 "강제 재실행"하세요.</p>
+    <div id="log">로그가 여기에 표시됩니다.</div>
+    <div id="result"></div>
+  </section>
+</div>
+</main>
+<script>
+const $=id=>document.getElementById(id);
+const H={'X-Autoedit':'1'};
+const STAGES=[['transcribe','전사','Whisper'],['cut','컷 편집','무음·추임새'],['plan','기획','Claude'],['image','이미지 생성','일러스트·아이콘'],['privacy','개인정보 탐지','OCR'],['render','최종 렌더','모자이크+합성']];
+const BOOL=['cut','illustrations','overlays','mosaic','blur_faces','mute_spoken_pii','subtitles','remove_stutters'];
+const OPT=['illustration_mode','whisper_model','image_provider','min_silence','keep_silence','silence_db','max_scenes_per_min','overlays_per_min','ocr_interval','video_quality','video_codec','whisper_device','blur_words','fillers'];
+let sel=localStorage.getItem('sel')||'', running=false, logPos=0, lastVideos=[], formInit=false;
+
+async function api(path,body){
+  const r=await fetch(path,{method:body?'POST':'GET',headers:body?{...H,'Content-Type':'application/json'}:{},body:body?JSON.stringify(body):undefined});
+  return r.json();
+}
+function collect(){
+  const o={};
+  BOOL.forEach(k=>o[k]=$(k).checked);
+  OPT.forEach(k=>{const v=$(k).value; o[k]=v});
+  return o;
+}
+function fillForm(d){
+  BOOL.forEach(k=>$(k).checked=!!d[k]);
+  OPT.forEach(k=>$(k).value=d[k]);
+}
+let lastJson='', shownOut='';
+function renderVideos(list){
+  const j=JSON.stringify(list)+'|'+sel;
+  if(j===lastJson) return;      // 바뀐 게 없으면 다시 그리지 않음 (재생 중인 영상이 끊기지 않게)
+  lastJson=j;
+  lastVideos=list;
+  const box=$('vids'); box.textContent='';
+  if(!list.length){const p=document.createElement('p');p.className='hint';p.textContent='아직 영상이 없습니다. 위에 영상을 올려 주세요.';box.append(p);return;}
+  if(!list.find(v=>v.id===sel)) sel=list[0].id;
+  list.forEach(v=>{
+    const d=document.createElement('div'); d.className='vid'+(v.id===sel?' sel':'');
+    const b=document.createElement('b'); b.textContent=v.name;
+    const s=document.createElement('small'); s.textContent=` ${v.folder}/ · ${v.size_mb} MB`;
+    const c=document.createElement('div'); c.className='chips';
+    STAGES.forEach(([k,l])=>{const x=document.createElement('span');x.className='chip'+(v.status[k]?' on':'');x.textContent=l;c.append(x)});
+    d.append(b,s,c);
+    d.onclick=()=>{sel=v.id;localStorage.setItem('sel',sel);renderVideos(lastVideos);showResult()};
+    box.append(d);
+  });
+  showResult();
+}
+function showResult(){
+  const r=$('result');
+  const v=lastVideos.find(x=>x.id===sel);
+  const want=(v&&v.output)||'';
+  if(want===shownOut) return;   // 같은 결과면 플레이어를 유지
+  shownOut=want; r.textContent='';
+  if(v&&v.output){
+    const h=document.createElement('p'); h.className='hint'; h.textContent='결과 영상';
+    const vd=document.createElement('video'); vd.controls=true; vd.src=v.output;
+    const a=document.createElement('a'); a.href=v.output; a.download=''; a.textContent='⬇ 다운로드'; a.className='btn'; a.style.display='inline-block'; a.style.marginTop='10px'; a.style.textDecoration='none';
+    r.append(h,vd,a);
+  }
+}
+function setRunning(on,stage){
+  running=on;
+  const s=$('state'); s.textContent=on?('실행 중'+(stage?` · ${stage}`:'')):'대기'; s.className='state'+(on?' run':'');
+  document.querySelectorAll('.steps button,#all').forEach(b=>b.disabled=on);
+}
+async function refresh(){
+  const d=await api('/api/state');
+  $('gpu').textContent='장치: '+d.gpu;
+  if(!formInit){fillForm(d.defaults);formInit=true;}
+  $('k1').textContent=d.keys.anthropic?`(설정됨 ${d.keys.anthropic})`:'(없음 — 기획 단계 건너뜀)';
+  $('k2').textContent=d.keys.openai?`(설정됨 ${d.keys.openai})`:'(없음 — Claude SVG로 그림)';
+  renderVideos(d.videos);
+  setRunning(d.job.running,d.job.stage);
+}
+async function run(stage){
+  if(!sel){alert('영상을 먼저 선택하세요');return;}
+  logPos=0; $('log').textContent='';
+  const r=await api('/api/run',{video:sel,stage,force:$('force').checked,opts:collect()});
+  if(!r.ok){alert(r.error);return;}
+  setRunning(true,stage);
+}
+async function poll(){
+  try{
+    const l=await api('/api/log?since='+logPos);
+    if(l.lines.length){const el=$('log');const atEnd=el.scrollTop+el.clientHeight>=el.scrollHeight-30;el.textContent+=l.lines.join('\n')+'\n';if(atEnd)el.scrollTop=el.scrollHeight;}
+    logPos=l.next;
+    if(running&&!l.running){setRunning(false);await refresh();}
+    else if(!running&&l.running){setRunning(true,l.stage);}
+  }catch(e){}
+}
+function upload(files){
+  [...files].forEach(f=>{
+    const x=new XMLHttpRequest(); x.open('POST','/api/upload?name='+encodeURIComponent(f.name));
+    x.setRequestHeader('X-Autoedit','1');
+    const bar=$('bar'); bar.style.display='block';
+    x.upload.onprogress=e=>{bar.firstElementChild.style.width=(e.loaded/e.total*100)+'%'};
+    x.onload=async()=>{bar.style.display='none';let r={};try{r=JSON.parse(x.responseText)}catch(e){}
+      if(r.id){sel=r.id;localStorage.setItem('sel',sel)} else alert(r.error||'업로드 실패'); await refresh();};
+    x.onerror=()=>{bar.style.display='none';alert('업로드 실패')};
+    x.send(f);
+  });
+}
+STAGES.forEach(([k,l,s])=>{const b=document.createElement('button');b.innerHTML='';b.append(l);const sm=document.createElement('small');sm.textContent=s;b.append(sm);b.onclick=()=>run(k);$('steps').append(b);});
+$('all').onclick=()=>run('all');
+$('refresh').onclick=refresh;
+$('clear').onclick=async()=>{if(!sel)return;if(!confirm('선택한 영상의 중간 결과(캐시)를 삭제합니다. 원본과 결과 영상은 유지됩니다.'))return;const r=await api('/api/clear',{video:sel,opts:collect()});if(r.error)alert(r.error);refresh();};
+$('savekeys').onclick=async()=>{const r=await api('/api/settings',{anthropic:$('anthropic').value,openai:$('openai').value});if(r.error){alert(r.error);return;}$('anthropic').value='';$('openai').value='';refresh();};
+const drop=$('drop'),file=$('file');
+drop.onclick=()=>file.click(); file.onchange=()=>{upload(file.files);file.value=''};
+['dragover','dragenter'].forEach(e=>drop.addEventListener(e,ev=>{ev.preventDefault();drop.classList.add('over')}));
+['dragleave','drop'].forEach(e=>drop.addEventListener(e,ev=>{ev.preventDefault();drop.classList.remove('over')}));
+drop.addEventListener('drop',ev=>upload(ev.dataTransfer.files));
+refresh(); setInterval(poll,1200); setInterval(()=>{if(!running)refresh()},8000);
+</script>
+</body>
+</html>

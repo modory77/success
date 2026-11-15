@@ -1,0 +1,11 @@
+faster-whisper
+opencv-python
+numpy
+imageio-ffmpeg
+anthropic
+openai
+resvg-py
+rapidocr-onnxruntime
+pillow
+nvidia-cublas-cu12
+nvidia-cudnn-cu12

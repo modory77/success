@@ -1,0 +1,37 @@
+# 비밀키 (절대 커밋 금지) — 견본은 .env.example 만 올린다
+.env
+.env.*
+!.env.example
+
+# 파이썬 환경/캐시
+.venv/
+__pycache__/
+*.pyc
+
+# 작업 산출물/영상 (용량 크고 개인 데이터)
+work/
+output/
+uploads/
+samples/
+inbox/
+models/
+*_work/
+*.mp4
+*.mov
+*.mkv
+*.avi
+*.m4v
+*.webm
+
+# 로고 이미지는 저작권/개인 자산 -> 폴더만 유지
+로고/*
+!로고/.gitkeep
+
+# 이 프로젝트와 무관한 개인 메모
+피클볼영상_편집계획.md
+
+# OS / 에디터
+Thumbs.db
+.DS_Store
+.vscode/
+.idea/
