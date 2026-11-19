@@ -4,7 +4,7 @@ from pathlib import Path
 
 import cv2
 
-from .common import FFMPEG, log, video_codec_args
+from .common import FFMPEG, FONTS_DIR_FILTER, log, video_codec_args
 from .privacy import boxes_for_frame, pixelate
 
 FADE = 0.25
@@ -50,7 +50,7 @@ def final_render(cut_video: Path, out: Path, info: dict, scan, step, items, mute
                       f"eof_action=pass:format=auto[v{k}]")
         last = f"v{k}"
     if subs:  # 자막은 오버레이 위에 얹는다 (cwd=work 기준 상대경로로 윈도우 경로 이스케이프 회피)
-        chains.append(f"[{last}]ass=filename={subs.name}:fontsdir=C\\\\:/Windows/Fonts[vs]")
+        chains.append(f"[{last}]ass=filename={subs.name}:fontsdir={FONTS_DIR_FILTER}[vs]")
         last = "vs"
     chains.append(f"[{last}]format=yuv420p[vout]")
     maps = ["-map", "[vout]"]
