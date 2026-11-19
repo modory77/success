@@ -6,7 +6,7 @@ import re
 from concurrent.futures import ThreadPoolExecutor
 from pathlib import Path
 
-from .common import KOREAN_FONT, ROOT, log
+from .common import FONT_NAME, KOREAN_FONT, ROOT, log
 
 W, H = 1920, 1080
 LOGO_EXTS = {".png", ".jpg", ".jpeg", ".webp", ".svg"}
@@ -152,7 +152,7 @@ def _stylize(svg: str, idx: int) -> str:
 def render_svg(svg: str, png_path: Path, width=W, height=H):
     import resvg_py
     data = resvg_py.svg_to_bytes(svg_string=svg, width=width, height=height, font_files=[str(KOREAN_FONT)],
-                                 font_family="Malgun Gothic")
+                                 font_family=FONT_NAME)
     png_path.write_bytes(bytes(data))
 
 

@@ -55,7 +55,14 @@ _register_cuda_dlls()
 os.environ.setdefault("HF_HUB_DISABLE_SYMLINKS_WARNING", "1")
 
 FFMPEG = imageio_ffmpeg.get_ffmpeg_exe()
-KOREAN_FONT = Path(r"C:\Windows\Fonts\malgun.ttf")
+if os.name == "nt":
+    KOREAN_FONT = Path(r"C:\Windows\Fonts\malgun.ttf")
+    FONT_NAME = "Malgun Gothic"
+    FONTS_DIR_FILTER = "C\\\\:/Windows/Fonts"   # ffmpeg 필터용 이스케이프
+else:  # 리눅스(클라우드): Noto Sans CJK (fonts-noto-cjk)
+    KOREAN_FONT = Path("/usr/share/fonts/opentype/noto/NotoSansCJK-Bold.ttc")
+    FONT_NAME = "Noto Sans CJK KR"
+    FONTS_DIR_FILTER = "/usr/share/fonts/opentype/noto"
 
 # ---- 로그: 콘솔 + (웹 UI 등) 외부 수신자 -------------------------------------------------
 _sinks = []
@@ -83,6 +90,8 @@ def log(msg: str):
 def cuda_ok() -> bool:
     """CUDA 런타임 DLL을 실제로 불러올 수 있는지 미리 확인 (보안 정책 등으로 막히면 False)."""
     import ctypes
+    if os.name != "nt":  # 리눅스(클라우드): nvidia-smi 로 GPU 유무만 확인
+        return gpu_name() != "GPU 없음 (CPU)"
     try:
         for d in Path(sys.prefix, "Lib", "site-packages", "nvidia").glob("cublas/bin"):
             for dll in d.glob("cublas64_*.dll"):
